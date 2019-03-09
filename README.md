@@ -69,6 +69,26 @@ The tracelog library can basically be used as a drop in for Winston, but where:-
 - Only transport configured is a console out transport
 - Defaults to INFO level in production, DEBUG in non prod or in testing modes (Checked via environment variables)
 
+## What makes this library cloud native?
+
+There is specific code in the configuration of the underlying logger that checks if the app is running in production,
+in dev, on the command line, or has been provided with Platform as a Service (PaaS) configuration environment variables.
+In particular, those used by Pivotal Cloud Foundry.
+
+The aim of this part of the logger is to automatically configure the underlying logger to log everything to standard out
+and not a file when running in a cloud native PaaS. This is one of the principles of cloud native app development.
+
+Once all those logs are collated in to a single stream though you need a way to report over them. 
+Typically this will be by filtering out all log messages outside of a particular module, or a particular service invocation.
+
+To do this, you need both the concept of a namespace (part of the app the message is for, in dot notation), and that
+of a context flag (a value unique to this request, and that is passed throughout the entire back end service chain call).
+
+cntracelog supports static namespaces per module/logger instance, and dynamic context IDs. These IDs can even be chained
+throughout the stack, again using dot notation, to provide deep context tracing if required.
+
+Other cloud environments and logging implementations will be added over time. Even better, add one yourself and send me a PR!
+
 ## Licensing and Copyright
 
 All code unless explicitly stated is copyright Adam Fowler All Rights Reserved.
