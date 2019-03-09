@@ -3,7 +3,6 @@
 const thismod = require("..");
 const wst = thismod.extensions.winston.transports.string;
 const expect = require('chai').expect;
-const vars = require('./vars.js');
 
 var ourwst = new wst({level: "silly"});
 
