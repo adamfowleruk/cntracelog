@@ -1,6 +1,6 @@
 {
   "name": "cntracelog",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Wraps a logger implementation to provide basic namespacing and request tracking across distributed systems.",
   "main": "src/index.js",
   "scripts": {
