@@ -1,7 +1,7 @@
 # tracelog
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
+[![Build Status](https://travis-ci.com/adamfowleruk/tracelog.svg?branch=master)](https://travis-ci.com/adamfowleruk/tracelog)
 
 I built tracelog because I wanted a library that could sit across multiple logging libraries (mainly Winston) and provide a set of extra services over their channels, without rewriting the entire logging chain. 
 

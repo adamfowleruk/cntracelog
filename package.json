@@ -4,7 +4,8 @@
   "description": "Wraps a logger implementation to provide basic namespacing and request tracking across distributed systems.",
   "main": "src/index.js",
   "scripts": {
-    "test": "c8 mocha src/tests/**/*.spec.js"
+    "test": "mocha src/tests/**/*.spec.js",
+    "coverage": "c8 mocha src/tests/**/*.spec.js"
   },
   "dependencies": {
     "winston": "3.2.1"
