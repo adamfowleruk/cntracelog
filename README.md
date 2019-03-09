@@ -1,9 +1,11 @@
-# tracelog
+# cntracelog
+
+A Cloud Native logging wrapper to trace app calls in distributed systems, and output the information to Winston.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://travis-ci.com/adamfowleruk/tracelog.svg?branch=master)](https://travis-ci.com/adamfowleruk/tracelog)
+[![Build Status](https://travis-ci.com/adamfowleruk/cntracelog.svg?branch=master)](https://travis-ci.com/adamfowleruk/cntracelog)
 
-I built tracelog because I wanted a library that could sit across multiple logging libraries (mainly Winston) and provide a set of extra services over their channels, without rewriting the entire logging chain. 
+I built cntracelog because I wanted a library that could sit across multiple logging libraries (mainly Winston) and provide a set of extra services over their channels, without rewriting the entire logging chain. 
 
 It had to support common Cloud Native app defaults, to take that logic out of my apps.
 
@@ -16,16 +18,16 @@ Facilities I required:-
 - Supports NPM log levels
 - Allowed customising the settings and underlying libraries as necessary
 
-## Getting tracelog
+## Getting cntracelog
 
-`npm i tracelog --save`
+`npm i cntracelog --save`
 
-## Using tracelog
+## Using cntracelog
 
 First, get a rootlogger at the top of your code module file:-
 
 ```javascript
-const tl = require('tracelog');
+const tl = require('cntracelog');
 tl.configure({level: "silly"}); // optional
 var rootlog = tl.createLogger("my.module.name");
 ```
