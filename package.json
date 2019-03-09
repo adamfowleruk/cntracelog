@@ -1,0 +1,35 @@
+{
+  "name": "tracelog",
+  "version": "1.0.0",
+  "description": "Wraps a logger implementation to provide basic namespacing and request tracking across distributed systems.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "c8 mocha src/tests/**/*.spec.js"
+  },
+  "dependencies": {
+    "winston": "3.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamfowleruk/tracelog.git"
+  },
+  "keywords": [
+    "logging",
+    "namespace",
+    "distributed",
+    "cloud",
+    "cloud",
+    "native"
+  ],
+  "author": "Adam Fowler <adamfowleruk@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/adamfowleruk/tracelog/issues"
+  },
+  "homepage": "https://github.com/adamfowleruk/tracelog#readme",
+  "devDependencies": {
+    "c8": "3.4.0",
+    "chai": "4.2.0",
+    "mocha": "6.0.2"
+  }
+}
