@@ -15,18 +15,69 @@
 const util = require('util');
 const extend = require('util')._extend;
 
+// COMMON CONSTANTS
+const J = ':\t';
+
+var levels = {
+    "error": 0, "warn": 1, "info": 3, "verbose": 4, "debug": 5, "silly": 6
+};
+
+// Default Logger
+class DefaultLogger {
+    constructor(opts) {
+        console.log("Creating DefaultLogger");
+        this.options = extend({level: "info"},opts);
+        if (this.options.buffer) {
+            this.logarray = [];
+        }
+    }
+    _logfmt(levelString,...args) {
+        var finalMsg = [levelString,...args].join(J);
+        if (this.options.buffer) {
+            this.logarray.push(finalMsg);
+        }
+        console.log(finalMsg);
+    }
+    get logString() {
+        if (this.options.buffer) {
+            return this.logarray.join(J);
+        }
+        return "";
+    }
+    error() {
+        this._logfmt("error",...arguments);
+    }
+    warn() {
+        this._logfmt("warn",...arguments);
+    }
+    info() {
+        this._logfmt("info",...arguments);
+    }
+    verbose() {
+        this._logfmt("verbose",...arguments);
+    }
+    debug() {
+        this._logfmt("debug",...arguments);
+    }
+    silly() {
+        this._logfmt("silly",...arguments);
+    }
+}
+
 // START ENGINE SELECTION
 const W = 'winston';
-const J = ':\t';
+const O = 'out';
 
 var options = {
     engine: W,
     level: 'debug',
     production: ("production" == process.env.NODE_ENV),
-    cli: (undefined === process.env.VCAP_SERVICES || undefined !== process.env.TEST_ENV),
+    cli: (undefined === process.env.VCAP_SERVICES && undefined !== process.env.TEST_ENV),
     extensions: {
         winston: {
             transports: []
+        },
+        out: {
         }
     }
 };
@@ -37,22 +88,33 @@ function configure(opts) {
 
 function createBaseLogger(ns,contextID) {
     var logger;
+    var foundLoggingEngine = false;
     if (W == options.engine) {
-        const winston = require('winston');
-        logger = winston.createLogger({
-            level: options.level,
-            defaultMeta: {
-                service: ns,
-                requestId: contextID
-            },
-            transports: [
-                new winston.transports.Console({
-                    format: options.cli ? winston.format.cli() : winston.format.simple()
-                  })
-                ,
-                ...options.extensions.winston.transports
-            ]
-        });
+        try {
+            const winston = require('winston');
+            logger = winston.createLogger({
+                level: options.level,
+                defaultMeta: {
+                    service: ns,
+                    requestId: contextID
+                },
+                transports: [
+                    new winston.transports.Console({
+                        format: options.cli ? winston.format.cli() : winston.format.simple()
+                    })
+                    ,
+                    ...options.extensions.winston.transports
+                ]
+            });
+            foundLoggingEngine = true;
+        } catch (err) {
+            console.out("Error attempting to load Winston library. Using console.out instead. Error Message: ",err);
+        }
+    }
+    if (O == options.engine || !foundLoggingEngine) {
+        // fallback to console.out
+        logger = new DefaultLogger(options.extensions.out);
+        foundLoggingEngine = true;
     }
     return logger;
 }

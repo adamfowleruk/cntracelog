@@ -14,31 +14,26 @@
 'use strict';
 
 const thismod = require("..");
-const wst = thismod.extensions.winston.transports.string;
 const expect = require('chai').expect;
 
-var ourwst = new wst({level: "silly"});
-
 // log to string as well as console so we can introspect logs
-thismod.configure({
-    extensions: {
-        winston: {
-            transports: [
-                ourwst
-            ]
-        },
-        out: {
-            buffer: true
-        }
-    },
-    level: "silly"
-});
-var toplog = thismod.createLogger('tracelog');
 
 describe('tracelog', () => {
-    describe('Calling contract', () => {
+    describe('Fallback to console.out', () => {
+        thismod.configure({
+            engine: "out",
+            level: "silly",
+            extensions: {
+                out: {
+                    buffer: true
+                }
+            }
+        });
+        var toplog = thismod.createLogger('tracelog');
+
         toplog.info("An INFO Message with no context");
-        var log = toplog.createChild('contract');
+
+        var log = toplog.createChild('fallback');
 
         log.error("An ERROR level message");
         log.warn("A WARN level message");
@@ -48,11 +43,9 @@ describe('tracelog', () => {
         log.silly("A SILLY level message");
         log.metric("A TIMED operation of ms ",6);
 
-        var logout = log.logger.logString;
-        var toplogout = toplog.logger.logString;
-        console.log("LOGOUT START");
-        console.log(logout);
-        console.log("LOGOUT END");
+        var logout = log.logger.logString; // internal method call - naughty
+        var toplogout = toplog.logger.logString; // internal method call - naughty
+
         it('should have an ERROR level message', () => {
             expect(logout.lastIndexOf("ERROR level message")).to.not.be.equal(-1);
         });
