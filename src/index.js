@@ -181,7 +181,7 @@ class TraceLogger {
     // PERFORMANCE METRICS
 
     metric(name,value) { 
-        this.info("METRIC ", name, value); 
+        this.info("METRIC ", name + "," + value); 
     }
 };
 
