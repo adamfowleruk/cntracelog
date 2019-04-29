@@ -1,6 +1,6 @@
 # cntracelog
 
-A Cloud Native logging wrapper to trace app calls in distributed systems, and output the information to Winston.
+A Cloud Native logging wrapper to trace app calls in distributed systems, and output the information to Winston or another logging library.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.com/adamfowleruk/cntracelog.svg?branch=master)](https://travis-ci.com/adamfowleruk/cntracelog)
@@ -10,18 +10,16 @@ A Cloud Native logging wrapper to trace app calls in distributed systems, and ou
 ![npm](https://img.shields.io/npm/dt/cntracelog.svg)
 ![node](https://img.shields.io/node/v/cntracelog.svg)
 
-I built cntracelog because I wanted a library that could sit across multiple logging libraries (mainly Winston) and provide a set of extra services over their channels, without rewriting the entire logging chain. 
+cntracelog will configure your chosen logging library based on environment variables
+from the detected cloud runtime, such as (Pivotal) Cloud Foundry.
 
-It had to support common Cloud Native app defaults, to take that logic out of my apps.
+Features include detecting dev vs. prod environments, and configuring a logging AMQP (message queue) sink if desired.
 
-Facilities I required:-
-- Outputting all logs to standard out (for Cloud Native apps)
-- Preconfiguring underlying log libraries based on NODE_ENV, TEST_ENV, and the presence of any PaaS environment configurations (including Pivotal Cloud Foundry)
-- Namespace support (code module name outputted in the logs)
-- Call tracing support (via providing a 'context id' field that is outputted to all messages) - for APM style call tracing
-- Could process Metrics log messages
-- Supports NPM log levels
-- Allowed customising the settings and underlying libraries as necessary
+cntracelog also provides a namespacing capability for log messages, and hierarchies of loggers. This enables you to log specific messages tagged for specific areas of your app.
+
+cntracelog also allows you to pass in a context variable using the same mechanism. This allows you to trace a single request all the way from browser, through your app tier, middleware/micro services layer, down to your storage layer. (APM-like functionality).
+
+See the sections below on cloud runtime support and logging library support for full details.
 
 ## Getting cntracelog
 
@@ -64,14 +62,14 @@ info:    my.module.name:	My module is all set up and ready to go!
 info:    my.module.name:	ID123456:	Starting to process request
 error:   my.module.name:	ID123456:	Uh oh something bad happened
 info:    my.module.name:	ID123456:	Done
-info:    my.module.name:	ID123456:	METRIC  A TIMED operation of ms  6
+info:    my.module.name:	ID123456:	METRIC  A TIMED operation of ms,6
 ```
 
 The above will be colour coded if running as part of Mocha/Chai tests, or executed via the command line.
 
-The tracelog library can basically be used as a drop in for Winston, but where:-
-- Only transport configured is a console out transport
-- Defaults to INFO level in production, DEBUG in non prod or in testing modes (Checked via environment variables)
+The tracelog library can also be used as a thin drop in for Winston, but where:-
+- The only transport configured is a console out transport
+- Defaults to INFO level in production, DEBUG in non prod or in testing modes (Checked via environment variable - NODE_ENV)
 
 ## What makes this library cloud native?
 
@@ -92,6 +90,69 @@ cntracelog supports static namespaces per module/logger instance, and dynamic co
 throughout the stack, again using dot notation, to provide deep context tracing if required.
 
 Other cloud environments and logging implementations will be added over time. Even better, add one yourself and send me a PR!
+
+## Support for underlying Node.js logging libraries
+
+cntracelog provides a wrapper layer of configuration and utilities around
+an existing logging library, or console.log as a fall back.
+
+Note by default that for the users of this library's convenience, all cloud native settings checked for are supported by all libraries. So you know that if a cloud platform is supported and a logging library is supported, that all configuration from one is supported by the other. There are no unexpected combinations that will not work.
+
+At the moment the below logging libraries are supported:-
+- Winston
+- console.log
+
+Note: cntracelog also provides a number of extensions for these logging libraries
+that are useful for cloud native development. These logging libraries are 
+configured automatically by cntracelog based on environment variables.
+
+As an example, if a Cloud Foundry environment variable is found for amqp logging, then
+cntracelog will configure Winston to log messages to AMQP as well as local files.
+
+### Winston support
+
+cntracelog will configure the below Winston settings:-
+- log level
+- Will add an amqp transport if configured in the cloud runtime (via the logging-amqp binding)
+
+cntracelog also provides some useful helper classes for Winston you may choose to use in your applications:-
+- winston-string-transport.js - Allows all log messages to be added to a string. Very useful for analysing output in Chai/Mocha tests. NOT suitable for production. (Will eat memory)
+- winston-amqp-transport.js - I was frustrated with existing AMQP/RabbitMQ layers that were poorly maintained, so I'm now using our own defined in this library. This will require the amqplib library to be available (this is NOT a forced dependening).
+
+
+## Support for cloud runtime environments
+
+The following cloud runtimes are supported:-
+- Cloud Foundry
+
+Others may be added in future based on demand
+
+### Cloud Foundry and cntracelog
+
+cntracelog will detect Cloud Foundry by the presence of the VCAP_SERVICES environment variable. If this (JSON) environment variable is found then cntracelog will look
+for a binding with the name 'logging-amqp'. If this is present, then its credentials.uri setting will be used for the AMQP connection to sink log messages to.
+
+Note: cntracelog itself does not write to AMQP, but does configure the underlying logging library you are using to do so. So for example, Winston would have an AMQP transport added to its list of transports.
+
+## Other helpers provided
+
+Some other useful helper classes are provided:-
+- AMQPSink in amqpsink.js - A Node.js app that will listen to RabbitMQ (via the logging-amqp binding) and take all log messages and write them to a local file. This is useful for centralising your log files across many apps or app instances.
+
+## Design
+
+I built cntracelog because I wanted a library that could sit across multiple logging libraries (mainly Winston) and provide a set of extra services over their channels, without rewriting the entire logging chain. 
+
+It had to support common Cloud Native app defaults, to take that logic out of my apps.
+
+Facilities I required:-
+- Outputting all logs to standard out (for Cloud Native apps)
+- Preconfiguring underlying log libraries based on NODE_ENV, TEST_ENV, and the presence of any PaaS environment configurations (including Pivotal Cloud Foundry)
+- Namespace support (code module name outputted in the logs)
+- Call tracing support (via providing a 'context id' field that is outputted to all messages) - for APM style call tracing
+- Could process Metrics log messages
+- Supports NPM log levels
+- Allowed customising the settings and underlying libraries as necessary
 
 ## Licensing and Copyright
 

@@ -14,6 +14,7 @@
 'use strict';
 const util = require('util');
 const extend = require('util')._extend;
+console.log("cntracelog");
 
 // COMMON CONSTANTS
 const J = ':\t';
@@ -21,6 +22,11 @@ const J = ':\t';
 var levels = {
     "error": 0, "warn": 1, "info": 3, "verbose": 4, "debug": 5, "silly": 6
 };
+
+// If you create your own cloud runtime detection, call it MYRUNTIME-runtime.js and place MYRUNTIME in the array as a string below:-
+var runtimes = [
+  "cloudfoundry"
+];
 
 // Default Logger
 class DefaultLogger {
@@ -65,14 +71,15 @@ class DefaultLogger {
 }
 
 // START ENGINE SELECTION
-const W = 'winston';
+const W = 'winston'; // Could also be 'log4js'
 const O = 'out';
 
+// Options is a cntracelog runtime set of options based on cloud config options
 var options = {
     engine: W,
     level: 'debug',
     production: ("production" == process.env.NODE_ENV),
-    cli: (undefined === process.env.VCAP_SERVICES && undefined !== process.env.TEST_ENV),
+    cli: (undefined !== process.env.TEST_ENV),
     extensions: {
         winston: {
             transports: []
@@ -81,6 +88,22 @@ var options = {
         }
     }
 };
+var cc;
+var found = false;
+for (var r = 0;r < runtimes.length && !found;r++) {
+  var runtime = runtimes[r];
+  try {
+    var runtimeModule = require("./" + runtime + "-runtime.js");
+    if (runtimeModule.supported()) {
+      // found it! Now configure our options for it
+      found = true;
+      cc = runtimeModule;
+      cc.configure(options);
+    }
+  } catch (err) {
+      console.log("Specified runtime '" + runtime + "' module not found. Skipping detection.");
+  }
+}
 
 function configure(opts) {
     extend(options,opts);
@@ -89,32 +112,21 @@ function configure(opts) {
 function createBaseLogger(ns,contextID) {
     var logger;
     var foundLoggingEngine = false;
-    if (W == options.engine) {
+    if (O != options.engine) {
         try {
-            const winston = require('winston');
-            logger = winston.createLogger({
-                level: options.level,
-                defaultMeta: {
-                    service: ns,
-                    requestId: contextID
-                },
-                transports: [
-                    new winston.transports.Console({
-                        format: options.cli ? winston.format.cli() : winston.format.simple()
-                    })
-                    ,
-                    ...options.extensions.winston.transports
-                ]
-            });
-            foundLoggingEngine = true;
+          var loggingModule = require("./" + options.engine + "-support.js");
+          foundLoggingEngine = loggingModule.supported();
+          if (foundLoggingEngine) {
+            logger = loggingModule.createLogger(options, ns, contextID);
+          }
         } catch (err) {
-            console.out("Error attempting to load Winston library. Using console.out instead. Error Message: ",err);
+          console.log("Error attempting to load Specified logging library '" + options.engine + "'. Using console.log instead. Error Message: ", err);
         }
     }
     if (O == options.engine || !foundLoggingEngine) {
-        // fallback to console.out
-        logger = new DefaultLogger(options.extensions.out);
-        foundLoggingEngine = true;
+      // fallback to console.out
+      logger = new DefaultLogger(options.extensions.out);
+      foundLoggingEngine = true;
     }
     return logger;
 }
