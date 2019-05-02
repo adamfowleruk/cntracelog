@@ -21,7 +21,7 @@ const amqp = require('amqplib');
 function rabbitUrl() {
   if (process.env.VCAP_SERVICES) {
     var svcInfo = JSON.parse(process.env.VCAP_SERVICES);
-    if (undefined !== svcInfo["amqp-log-sink"]) {
+    if (undefined !== svcInfo["amqp-log-sink"] && undefined !== svcInfo["amqp-log-sink"].credentials) {
       return svcInfo["amqp-log-sink"].credentials.uri;
     }
   }
@@ -31,59 +31,66 @@ function rabbitUrl() {
 
 // CONSTANTS
 // TODO get these from cloud too
-const ex = 'log-sink-exchange';
+const ex = 'logging-exchange';
 
 var conn = null;
 
-async function doConnect() {
-  var log = stepslog.createChild("connect");
-  log.info("in easyworkflow-step doConnect");
-  return amqp.connect(
-    rabbitUrl()
-  ).then((cn) => {
-    log.info("Got connection object");
-    conn = cn;
-    return conn;
-  }).error((err) => {
-    log.error("Error connecting to rabbit mq in doConnect. Returning. : ", err);
-    throw err;
-  });
-};
-
 // TODO let service die immediately if the underlying connection fails (Cloud Native)
 
-function doSink() {
+var log = "";
+
+function doSink(options) {
+  console.log("AMQPSINK: doSink");
   var inChannel;
   var q;
 
   // TODO open target log file first
 
-  return conn.createChannel({
+  return amqp.connect(
+      rabbitUrl()
+    ).then((cn) => {
+      console.log('AMQPSINK: got connection');
+      conn = cn;
+      return conn.createChannel({
       noAck: false,
       autoAck: true
+    });
     }).then((ch) => {
+      console.log("AMQPSINK: got channel");
       inChannel = ch;
-      inChannel.assertExchange(ex, 'direct', {
-        durable: true
+      inChannel.assertExchange(ex, 'topic', {
+        durable: false
       });
 
-      return inChannel.assertQueue(classname, {
+      return inChannel.assertQueue("amqpsink", {
         exclusive: false
       });
     }).then((quu) => {
       q = quu;
+      console.log("AMQPSINK: Got queue");
+      console.log(q);
 
-      return inChannel.bindQueue(q.queue, ex, classname);
+      return inChannel.bindQueue(q.queue, ex, "");
     }).then((ok) => {
       return inChannel.consume(q.queue, async (msg) => {
+        console.log("AMQPSINK: consume");
         var line = msg.content.toString();
 
         // TODO process log line
+        if (true == options.memoryCache) {
+          log += line + "\n";
+        }
       });
+    }).catch((err) => {
+      console.log("AMQPSINK: Error in amqpsink doSink", err);
     });
 }
 
+function getLog() {
+  return log;
+}
+
 module.exports = {
-  connect: doConnect,
-  sink: doSink
+  sink: doSink,
+  getLog: getLog
 };

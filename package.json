@@ -4,15 +4,13 @@
   "description": "Wraps a logger implementation to provide basic namespacing and request tracking across distributed systems.",
   "main": "src/index.js",
   "scripts": {
-    "test": "c8 mocha src/tests/**/*.spec.js",
+    "test": "c8 mocha --exit src/tests/**/*.spec.js",
     "coverage": "c8 report --reporter=text-lcov | coveralls"
   },
   "engines": {
     "node": ">=10.3.0"
   },
   "dependencies": {
-    "winston": "3.2.1",
-    "winston-amqp": "0.0.3"
   },
   "repository": {
     "type": "git",
@@ -35,6 +33,9 @@
     "c8": "3.4.0",
     "chai": "4.2.0",
     "coveralls": "^3.0.2",
-    "mocha": "6.1.4"
+    "mocha": "6.1.4",
+    "proxyquire": "2.1.0",
+    "winston": "3.2.1",
+    "winston-amqp": "0.0.3"
   }
 }

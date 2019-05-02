@@ -18,9 +18,10 @@
 module.exports = {
   supported: function() {
     // detect cloud foundry
-    return undefined !== process.env.VCAP_SERVICES
+    return undefined !== process.env.VCAP_SERVICES;
   },
   configure: function(options) {
+    var cc;
     if (undefined !== (cc = process.env.VCAP_SERVICES)) {
       cc = JSON.parse(cc);
       // Cloud Foundry
@@ -29,14 +30,12 @@ module.exports = {
       if (undefined !== cc["logging-amqp"]) {
         // pass down amqp details
         options.amqp = {
-          uri: cc["logging-amqp"].uri // TODO verify the options here
-            ,
+          uri: cc["logging-amqp"].credentials.uri // TODO verify the options here
+          ,
           exchangeType: cc["logging-amqp"].exchangeType,
-          exchange: cc["logging-amqp"].exchangeType,
+          exchange: cc["logging-amqp"].exchange,
           routingKey: cc["logging-amqp"].routingKey
         };
-        console.log("Cloud Foundry amqp settings:-");
-        console.log(options.amqp);
       }
     }
   }

@@ -13,7 +13,6 @@
  */
 'use strict';
 const Transport = require('winston-transport');
-const util = require('util');
 
 // A transport that outputs to a string
 module.exports = class StringTransport extends Transport {

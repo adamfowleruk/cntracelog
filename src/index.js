@@ -20,7 +20,12 @@ console.log("cntracelog");
 const J = ':\t';
 
 var levels = {
-    "error": 0, "warn": 1, "info": 3, "verbose": 4, "debug": 5, "silly": 6
+  "error": 0,
+  "warn": 1,
+  "info": 3,
+  "verbose": 4,
+  "debug": 5,
+  "silly": 6
 };
 
 // If you create your own cloud runtime detection, call it MYRUNTIME-runtime.js and place MYRUNTIME in the array as a string below:-
@@ -30,44 +35,46 @@ var runtimes = [
 
 // Default Logger
 class DefaultLogger {
-    constructor(opts) {
-        console.log("Creating DefaultLogger");
-        this.options = extend({level: "info"},opts);
-        if (this.options.buffer) {
-            this.logarray = [];
-        }
+  constructor(opts) {
+    console.log("Creating DefaultLogger");
+    this.options = extend({
+      level: "info"
+    }, opts);
+    if (this.options.buffer) {
+      this.logarray = [];
     }
-    _logfmt(levelString,...args) {
-        var finalMsg = [levelString,...args].join(J);
-        if (this.options.buffer) {
-            this.logarray.push(finalMsg);
-        }
-        console.log(finalMsg);
+  }
+  _logfmt(levelString, ...args) {
+    var finalMsg = [levelString, ...args].join(J);
+    if (this.options.buffer) {
+      this.logarray.push(finalMsg);
     }
-    get logString() {
-        if (this.options.buffer) {
-            return this.logarray.join(J);
-        }
-        return "";
+    console.log(finalMsg);
+  }
+  get logString() {
+    if (this.options.buffer) {
+      return this.logarray.join(J);
     }
-    error() {
-        this._logfmt("error",...arguments);
-    }
-    warn() {
-        this._logfmt("warn",...arguments);
-    }
-    info() {
-        this._logfmt("info",...arguments);
-    }
-    verbose() {
-        this._logfmt("verbose",...arguments);
-    }
-    debug() {
-        this._logfmt("debug",...arguments);
-    }
-    silly() {
-        this._logfmt("silly",...arguments);
-    }
+    return "";
+  }
+  error() {
+    this._logfmt("error", ...arguments);
+  }
+  warn() {
+    this._logfmt("warn", ...arguments);
+  }
+  info() {
+    this._logfmt("info", ...arguments);
+  }
+  verbose() {
+    this._logfmt("verbose", ...arguments);
+  }
+  debug() {
+    this._logfmt("debug", ...arguments);
+  }
+  silly() {
+    this._logfmt("silly", ...arguments);
+  }
 }
 
 // START ENGINE SELECTION
@@ -76,59 +83,72 @@ const O = 'out';
 
 // Options is a cntracelog runtime set of options based on cloud config options
 var options = {
-    engine: W,
-    level: 'debug',
-    production: ("production" == process.env.NODE_ENV),
-    cli: (undefined !== process.env.TEST_ENV),
-    extensions: {
-        winston: {
-            transports: []
-        },
-        out: {
-        }
-    }
+  engine: W,
+  level: 'debug',
+  production: ("production" == process.env.NODE_ENV),
+  cli: (undefined !== process.env.TEST_ENV),
+  extensions: {
+    winston: {
+      transports: []
+    },
+    out: {}
+  }
 };
 var cc;
 var found = false;
-for (var r = 0;r < runtimes.length && !found;r++) {
-  var runtime = runtimes[r];
+var runtime = "none";
+for (var r = 0; r < runtimes.length && !found; r++) {
+  var newRuntime = runtimes[r];
   try {
-    var runtimeModule = require("./" + runtime + "-runtime.js");
+    var runtimeModule = require("./" + newRuntime + "-runtime.js");
     if (runtimeModule.supported()) {
       // found it! Now configure our options for it
       found = true;
+      runtime = newRuntime;
       cc = runtimeModule;
       cc.configure(options);
     }
   } catch (err) {
-      console.log("Specified runtime '" + runtime + "' module not found. Skipping detection.");
+    console.log("Specified runtime '" + newRuntime + "' module not found. Skipping detection.");
   }
 }
 
+function getRuntime() {
+  return runtime;
+}
+
+function getEngine() {
+  return options.engine;
+}
+
 function configure(opts) {
-    extend(options,opts);
+  extend(options, opts);
 };
 
-function createBaseLogger(ns,contextID) {
-    var logger;
-    var foundLoggingEngine = false;
-    if (O != options.engine) {
-        try {
-          var loggingModule = require("./" + options.engine + "-support.js");
-          foundLoggingEngine = loggingModule.supported();
-          if (foundLoggingEngine) {
-            logger = loggingModule.createLogger(options, ns, contextID);
-          }
-        } catch (err) {
-          console.log("Error attempting to load Specified logging library '" + options.engine + "'. Using console.log instead. Error Message: ", err);
-        }
+function getOptions() {
+  return options;
+}
+
+function createBaseLogger(ns, contextID) {
+  var logger;
+  var foundLoggingEngine = false;
+  if (O != options.engine) {
+    try {
+      var loggingModule = require("./" + options.engine + "-support.js");
+      foundLoggingEngine = loggingModule.supported();
+      if (foundLoggingEngine) {
+        logger = loggingModule.createLogger(options, ns, contextID);
+      }
+    } catch (err) {
+      console.log("Error attempting to load Specified logging library '" + options.engine + "'. Using console.log instead. Error Message: ", err);
     }
-    if (O == options.engine || !foundLoggingEngine) {
-      // fallback to console.out
-      logger = new DefaultLogger(options.extensions.out);
-      foundLoggingEngine = true;
-    }
-    return logger;
+  }
+  if (O == options.engine || !foundLoggingEngine) {
+    // fallback to console.out
+    logger = new DefaultLogger(options.extensions.out);
+    foundLoggingEngine = true;
+  }
+  return logger;
 }
 
 // END ENGINE SELECTION
@@ -136,81 +156,84 @@ function createBaseLogger(ns,contextID) {
 // START TRACE LOGGER
 
 class TraceLogger {
-    constructor(namespace, optContextID) {
-        this.ns = namespace;
-        this.context = optContextID;
-        this.logger = createBaseLogger();
-    }
+  constructor(namespace, optContextID) {
+    this.ns = namespace;
+    this.context = optContextID;
+    this.logger = createBaseLogger();
+  }
 
-    createChild(contextID) {
-        var newctx = "";
-        if (undefined !== this.context && "" !== this.context && this.context !== contextID) 
-            newctx = this.context + ".";
-        newctx += contextID;
-        return new TraceLogger(this.ns,newctx);
-    }
+  createChild(contextID) {
+    var newctx = "";
+    if (undefined !== this.context && "" !== this.context && this.context !== contextID)
+      newctx = this.context + ".";
+    newctx += contextID;
+    return new TraceLogger(this.ns, newctx);
+  }
 
-    // INTERNAL MESSAGE FORMATTING
+  // INTERNAL MESSAGE FORMATTING
 
-    _fmt(args) {
-        if (undefined === this.context) 
-            return util.format(
-                [this.ns,args[0]].join(J),
-                ...(args.slice(1))
-            );
-        return util.format(
-            [this.ns,this.context,args[0]].join(J),
-            ...(args.slice(1))
-        );
-    }
+  _fmt(args) {
+    if (undefined === this.context)
+      return util.format(
+        [this.ns, args[0]].join(J),
+        ...(args.slice(1))
+      );
+    return util.format(
+      [this.ns, this.context, args[0]].join(J),
+      ...(args.slice(1))
+    );
+  }
 
-    // NPM logging methods
+  // NPM logging methods
 
-    error(...args) {
-        this.logger.error(this._fmt(args));
-    }
+  error(...args) {
+    this.logger.error(this._fmt(args));
+  }
 
-    warn(...args) {
-        this.logger.warn(this._fmt(args));
-    }
+  warn(...args) {
+    this.logger.warn(this._fmt(args));
+  }
 
-    info(...args) {
-        this.logger.info(this._fmt(args));
-    }
+  info(...args) {
+    this.logger.info(this._fmt(args));
+  }
 
-    verbose(...args) {
-        this.logger.verbose(this._fmt(args));
-    }
+  verbose(...args) {
+    this.logger.verbose(this._fmt(args));
+  }
 
-    debug(...args) {
-        this.logger.debug(this._fmt(args));
-    }
+  debug(...args) {
+    this.logger.debug(this._fmt(args));
+  }
 
-    silly(...args) {
-        this.logger.silly(this._fmt(args));
-    }
+  silly(...args) {
+    this.logger.silly(this._fmt(args));
+  }
 
-    // PERFORMANCE METRICS
+  // PERFORMANCE METRICS
 
-    metric(name,value) { 
-        this.info("METRIC ", name + "," + value); 
-    }
+  metric(name, value) {
+    this.info("METRIC ", name + "," + value);
+  }
 };
 
 function createLogger(namespace, optContextID) {
-    return new TraceLogger(namespace,optContextID);
+  return new TraceLogger(namespace, optContextID);
 };
 
 // END TRACE LOGGER
 
 module.exports = {
-    createLogger: createLogger,
-    configure: configure,
-    extensions: {
-        winston: {
-            transports: {
-                string: require("./winston-string-transport.js")
-            }
-        }
+  createLogger: createLogger,
+  configure: configure,
+  extensions: {
+    winston: {
+      transports: {
+        string: require("./winston-string-transport.js")
+      }
     }
+  },
+  getRuntime: getRuntime,
+  getEngine: getEngine,
+  getOptions: getOptions
 };

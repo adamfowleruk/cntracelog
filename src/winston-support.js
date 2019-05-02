@@ -30,25 +30,31 @@ module.exports = {
       const winston = require('winston');
       // Check for optional logging features
       if (undefined !== options.amqp) {
+        /*
         require("amqp-winston");
         const AMQPTransport = winston.transports.AMQP;
+        */
+        var AMQPTransport = require("./winston-amqp-transport.js");
         var uri = options.amqp.uri;
+        /*
         if (undefined !== options.amqp.exchange) {
           uri += options.amqp.exchange;
           if (undefined !== options.amqp.routingKey) {
             uri += "/" + options.amqp.routingKey;
           }
         }
+        */
         console.log("AMQP URI now: " + uri);
         options.extensions.winston.transports.push(
           new AMQPTransport({
-            uri: uri
+            uri: uri,
             /*
             uri: options.amqp.uri + exchange + "/" + ,
+            */
             exchangeType: options.amqp.exchangeType || "topic",
             exchange: options.amqp.exchange || "logs",
             routingKey: options.amqp.routingKey || ""
-            */
+            
           })
         )
       }

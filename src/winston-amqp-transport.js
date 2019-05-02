@@ -15,3 +15,70 @@
 /**
  * A reliable, updated, AMQP transport for Winston
  */
+const Transport = require('winston-transport');
+
+// A transport that outputs to a string
+module.exports = class CNAMQPTransport extends Transport {
+  
+  constructor(opts) {
+    super(opts);
+    this.opts = opts;
+    this.ls = "";
+    this.memoryCache = opts.memoryCache || false;
+    this.mc = 0;
+  }
+
+  log(info, callback) {
+    if (undefined == this.outChannel) {
+      // Connect to AMQP
+      var that = this;
+      var amqp = require('amqplib');
+      console.log("CNAMQPTransport got uri: " + that.opts.uri);
+      amqp.connect(
+        that.opts.uri
+      ).then((cn) => {
+        console.log("CNAMQPTransport got connection");
+        that.conn = cn;
+        return that.conn.createChannel();
+      }).then((outie) => {
+        console.log("CNAMQPTransport got out channel");
+        that.outChannel = outie;
+        that.outChannel.assertExchange(that.opts.exchange || "logging-exchange", that.opts.exchangeType || "topic", {
+          durable: false
+        });
+      }).then(() => {
+        console.log("CNAMQPTransport got exchange");
+        that.outChannel.publish(that.opts.exchange || "logging-exchange"
+          , "",Buffer.from(JSON.stringify(info)));
+        that.mc++;
+        if (that.memoryCache) {
+          that.ls += info.message + "\n";
+        }
+        console.log("CNAMQPTransport sent log message");
+        callback();
+      }).catch((err) => {
+        console.error("Problem opening CNAMQPTransport via AMQP", err);
+        that.outChannel = undefined;
+      });
+    } else {
+      this.outChannel.publish(that.opts.exchange || "logging-exchange"
+        ,"",Buffer.from(JSON.stringify(info)));
+      this.mc++; 
+
+      if (this.memoryCache) {
+        this.ls += info.message + "\n";
+      }
+
+      // Pass callback
+      callback();
+    }
+  }
+
+  get logString() {
+    return this.ls;
+  }
+
+  get messageCount() {
+    return this.mc;
+  }
+};
