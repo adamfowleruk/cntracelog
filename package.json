@@ -1,6 +1,6 @@
 {
   "name": "cntracelog",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Wraps a logger implementation to provide basic namespacing and request tracking across distributed systems.",
   "main": "src/index.js",
   "scripts": {
@@ -20,7 +20,11 @@
     "namespace",
     "distributed",
     "cloud",
-    "native"
+    "native",
+    "cloud native logging",
+    "amqp",
+    "winston",
+    "log4js"
   ],
   "author": "Adam Fowler <adamfowleruk@gmail.com>",
   "license": "Apache-2.0",
