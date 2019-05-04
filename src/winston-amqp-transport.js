@@ -16,6 +16,7 @@
  * A reliable, updated, AMQP transport for Winston
  */
 const Transport = require('winston-transport');
+const os = require('os');
 
 // A transport that outputs to a string
 module.exports = class CNAMQPTransport extends Transport {
@@ -29,6 +30,9 @@ module.exports = class CNAMQPTransport extends Transport {
   }
 
   log(info, callback) {
+    // add hostname and local timestamp
+    // Using a string timestamp as JSON and long long numbers don't mix well
+    var completeInfo = {message: info.message,level: info.level,timestamp:(new Date()).toISOString(),hostname: os.hostname()}
     if (undefined == this.outChannel) {
       // Connect to AMQP
       var that = this;
@@ -49,7 +53,7 @@ module.exports = class CNAMQPTransport extends Transport {
       }).then(() => {
         console.log("CNAMQPTransport got exchange");
         that.outChannel.publish(that.opts.exchange || "logging-exchange"
-          , "",Buffer.from(JSON.stringify(info)));
+          , "", Buffer.from(JSON.stringify(completeInfo)));
         that.mc++;
         if (that.memoryCache) {
           that.ls += info.message + "\n";
@@ -62,7 +66,7 @@ module.exports = class CNAMQPTransport extends Transport {
       });
     } else {
       this.outChannel.publish(that.opts.exchange || "logging-exchange"
-        ,"",Buffer.from(JSON.stringify(info)));
+        , "", Buffer.from(JSON.stringify(completeInfo)));
       this.mc++; 
 
       if (this.memoryCache) {

@@ -53,7 +53,7 @@ describe('tracelog', () => {
       sinkPromise = sink.sink({memoryCache:true});
       return sinkPromise.then(() => {
         // log something
-        toplog.info(msg)
+        toplog.info(msg); // async so won't appear in the log yet
         // wait a minute
         // then grab logs
         log = sink.getLog();
@@ -64,11 +64,13 @@ describe('tracelog', () => {
     it('log should not be undefined',() => {
       expect(sink.getLog()).to.not.be.undefined;
     });
-    /*
+    
+    // The below won't work as it completes too fast to be caught - manuall testing with 2 run throughs does work
     it('log should include a line about amqp',() => {
-      expect(sink.getLog().indexOf(msg)).to.not.be.eq(-1);
+      log = sink.getLog();
+      console.log("LOGOUT finally: " + log);
+      expect(log.indexOf(msg)).to.not.be.eq(-1);
     });
-*/
-
+    
   })
 });
