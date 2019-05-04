@@ -37,28 +37,28 @@ module.exports = class CNAMQPTransport extends Transport {
       // Connect to AMQP
       var that = this;
       var amqp = require('amqplib');
-      console.log("CNAMQPTransport got uri: " + that.opts.uri);
+      //console.log("CNAMQPTransport got uri: " + that.opts.uri);
       amqp.connect(
         that.opts.uri
       ).then((cn) => {
-        console.log("CNAMQPTransport got connection");
+        //console.log("CNAMQPTransport got connection");
         that.conn = cn;
         return that.conn.createChannel();
       }).then((outie) => {
-        console.log("CNAMQPTransport got out channel");
+        //console.log("CNAMQPTransport got out channel");
         that.outChannel = outie;
         that.outChannel.assertExchange(that.opts.exchange || "logging-exchange", that.opts.exchangeType || "topic", {
           durable: false
         });
       }).then(() => {
-        console.log("CNAMQPTransport got exchange");
+        //console.log("CNAMQPTransport got exchange");
         that.outChannel.publish(that.opts.exchange || "logging-exchange"
           , "", Buffer.from(JSON.stringify(completeInfo)));
         that.mc++;
         if (that.memoryCache) {
           that.ls += info.message + "\n";
         }
-        console.log("CNAMQPTransport sent log message");
+        //console.log("CNAMQPTransport sent log message");
         callback();
       }).catch((err) => {
         console.error("Problem opening CNAMQPTransport via AMQP", err);

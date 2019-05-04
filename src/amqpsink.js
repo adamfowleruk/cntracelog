@@ -40,7 +40,7 @@ var conn = null;
 var log = "";
 
 function doSink(options) {
-  console.log("AMQPSINK: doSink");
+  //console.log("AMQPSINK: doSink");
   var inChannel;
   var q;
 
@@ -49,14 +49,14 @@ function doSink(options) {
   return amqp.connect(
       rabbitUrl()
     ).then((cn) => {
-      console.log('AMQPSINK: got connection');
+      //console.log('AMQPSINK: got connection');
       conn = cn;
       return conn.createChannel({
       noAck: false,
       autoAck: true
     });
     }).then((ch) => {
-      console.log("AMQPSINK: got channel");
+      c//onsole.log("AMQPSINK: got channel");
       inChannel = ch;
       inChannel.assertExchange(ex, 'topic', {
         durable: false
@@ -67,13 +67,13 @@ function doSink(options) {
       });
     }).then((quu) => {
       q = quu;
-      console.log("AMQPSINK: Got queue");
-      console.log(q);
+      //console.log("AMQPSINK: Got queue");
+      //console.log(q);
 
       return inChannel.bindQueue(q.queue, ex, "");
     }).then((ok) => {
       return inChannel.consume(q.queue, async (msg) => {
-        console.log("AMQPSINK: consume");
+        //console.log("AMQPSINK: consume");
         var line = msg.content.toString();
 
         // TODO process log line
