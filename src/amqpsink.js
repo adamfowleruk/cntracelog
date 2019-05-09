@@ -56,7 +56,7 @@ function doSink(options) {
       autoAck: true
     });
     }).then((ch) => {
-      c//onsole.log("AMQPSINK: got channel");
+      //console.log("AMQPSINK: got channel");
       inChannel = ch;
       inChannel.assertExchange(ex, 'topic', {
         durable: false
