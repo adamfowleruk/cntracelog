@@ -156,18 +156,23 @@ function createBaseLogger(ns, contextID) {
 // START TRACE LOGGER
 
 class TraceLogger {
-  constructor(namespace, optContextID) {
+  constructor(namespace, optContextID, optBaseLogger) {
     this.ns = namespace;
     this.context = optContextID;
-    this.logger = createBaseLogger();
+    if (undefined !== optBaseLogger) {
+      this.logger = optBaseLogger;
+    } else {
+      this.logger = createBaseLogger(); // Should only be called once per base logger (i.e. per runtime context if application is written correctly)
+    }
   }
 
   createChild(contextID) {
     var newctx = "";
-    if (undefined !== this.context && "" !== this.context && this.context !== contextID)
+    if (undefined !== this.context && "" !== this.context && this.context !== contextID) {
       newctx = this.context + ".";
+    }
     newctx += contextID;
-    return new TraceLogger(this.ns, newctx);
+    return new TraceLogger(this.ns, newctx, this.logger);
   }
 
   // INTERNAL MESSAGE FORMATTING
