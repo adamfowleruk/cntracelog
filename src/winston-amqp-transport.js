@@ -27,33 +27,51 @@ module.exports = class CNAMQPTransport extends Transport {
     this.ls = "";
     this.memoryCache = opts.memoryCache || false;
     this.mc = 0;
+    this.aet = "topic";
+    this.ae = "logging-exchange";
+    this.ark = "";
+    if (undefined != this.opts.exchange) {
+      this.ae = this.opts.exchange;
+    }
+    if (undefined != this.opts.exchangeType) {
+      this.aet = this.opts.exchangeType;
+    }
+    if (undefined != this.opts.routingKey) {
+      this.ark = this.opts.routingKey;
+    }
+    console.log("cntracelog.winston.amqp: amqp exchange type=" + this.aet);
+    console.log("cntracelog.winston.amqp: amqp exchange=" + this.ae);
+    console.log("cntracelog.winston.amqp: amqp routing key=" + this.ark);
   }
 
   log(info, callback) {
     // add hostname and local timestamp
     // Using a string timestamp as JSON and long long numbers don't mix well
     var completeInfo = {message: info.message,level: info.level,timestamp:(new Date()).toISOString(),hostname: os.hostname()}
+    var that = this;
     if (undefined == this.outChannel) {
       // Connect to AMQP
-      var that = this;
       var amqp = require('amqplib');
+      
       //console.log("CNAMQPTransport got uri: " + that.opts.uri);
       amqp.connect(
         that.opts.uri
       ).then((cn) => {
-        //console.log("CNAMQPTransport got connection");
+        console.log("CNAMQPTransport got connection");
         that.conn = cn;
         return that.conn.createChannel();
       }).then((outie) => {
-        //console.log("CNAMQPTransport got out channel");
+        console.log("CNAMQPTransport got out channel");
         that.outChannel = outie;
-        that.outChannel.assertExchange(that.opts.exchange || "logging-exchange", that.opts.exchangeType || "topic", {
+        that.outChannel.assertExchange(that.ae, that.aet, {
           durable: false
         });
       }).then(() => {
-        //console.log("CNAMQPTransport got exchange");
-        that.outChannel.publish(that.opts.exchange || "logging-exchange"
-          , "", Buffer.from(JSON.stringify(completeInfo)));
+        console.log("CNAMQPTransport got exchange");
+        // TODO verify second parameter is the routingKey
+        var completeString = JSON.stringify(completeInfo);
+        //console.log("LOGGINGSTRING: " + completeString);
+        that.outChannel.publish(that.ae, that.ark, Buffer.from(completeString));
         that.mc++;
         if (that.memoryCache) {
           that.ls += info.message + "\n";
@@ -65,8 +83,10 @@ module.exports = class CNAMQPTransport extends Transport {
         that.outChannel = undefined;
       });
     } else {
-      this.outChannel.publish(that.opts.exchange || "logging-exchange"
-        , "", Buffer.from(JSON.stringify(completeInfo)));
+      var completeString = JSON.stringify(completeInfo);
+      //console.log("LOGGINGSTRING: " + completeString);
+      this.outChannel.publish(that.ae
+        , that.ark, Buffer.from(completeString));
       this.mc++; 
 
       if (this.memoryCache) {

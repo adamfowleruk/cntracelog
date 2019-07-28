@@ -30,11 +30,11 @@ module.exports = {
       if (undefined !== cc["logging-amqp"]) {
         // pass down amqp details
         options.amqp = {
-          uri: cc["logging-amqp"].credentials.uri // TODO verify the options here
+          uri: cc["logging-amqp"].credentials.uri || "" // TODO verify the options here
           ,
-          exchangeType: cc["logging-amqp"].exchangeType,
-          exchange: cc["logging-amqp"].exchange,
-          routingKey: cc["logging-amqp"].routingKey
+          exchangeType: cc["logging-amqp"].exchangeType || "",
+          exchange: cc["logging-amqp"].exchange || "",
+          routingKey: cc["logging-amqp"].routingKey || ""
         };
       }
     }

@@ -16,13 +16,15 @@
  * Adds safe Winston logging library detection and configuration
  **/
 
+var configuredAMQPTransports = {};
+
 module.exports = {
   supported: function() {
     try {
       const winston = require('winston');
       return true;
     } catch (err) {
-      console.log("Error attempting to load Winston library. Using console.log instead. Error Message: ", err);
+      console.log("cntracelog Error attempting to load Winston library. Using console.log instead. Error Message: ", err);
       return false;
     }
   },
@@ -34,30 +36,58 @@ module.exports = {
         require("amqp-winston");
         const AMQPTransport = winston.transports.AMQP;
         */
+        var amqpT = configuredAMQPTransports[amqpKey];
+        var amqpKey = options.amqp.uri + "|" + options.amqp.exchange + "|" + options.amqp.exchangeType + "|" + options.amqp.routingKey;
+        if (undefined === amqpT) {
         var AMQPTransport = require("./winston-amqp-transport.js");
-        var uri = options.amqp.uri;
-        /*
-        if (undefined !== options.amqp.exchange) {
-          uri += options.amqp.exchange;
-          if (undefined !== options.amqp.routingKey) {
-            uri += "/" + options.amqp.routingKey;
+        if (undefined != options.amqp.uri) {
+          var uri = options.amqp.uri;
+          /*
+          if (undefined !== options.amqp.exchange) {
+            uri += options.amqp.exchange;
+            if (undefined !== options.amqp.routingKey) {
+              uri += "/" + options.amqp.routingKey;
+            }
           }
+          */
+          //console.log("cntracelog AMQP URI now: " + uri);
+          var aet = "topic";
+          var ae = "logging-exchange";
+          var ark = "";
+          if (undefined != options.amqp.exchangeType) {
+            aet = options.amqp.exchangeType;
+          }
+          if (undefined != options.amqp.exchange) {
+            ae = options.amqp.exchange;
+          }
+          if (undefined != options.amqp.routingKey) {
+            ark = options.amqp.routingKey;
+          }
+      //console.log("amqp exchange: " + ae);
+      //console.log("amqp exchange type: " + aet);
+      //console.log("amqp routing key: " + ark);
+          amqpT =
+            new AMQPTransport({
+              uri: uri,
+              /*
+              uri: options.amqp.uri + exchange + "/" + ,
+              */
+              exchangeType: aet,
+              exchange: ae,
+              routingKey: ark
+
+            });
+            configuredAMQPTransports[amqpKey] = amqpT;
+          }
+          options.extensions.winston.transports.push(
+            amqpT
+          )
         }
-        */
-        console.log("AMQP URI now: " + uri);
-        options.extensions.winston.transports.push(
-          new AMQPTransport({
-            uri: uri,
-            /*
-            uri: options.amqp.uri + exchange + "/" + ,
-            */
-            exchangeType: options.amqp.exchangeType || "topic",
-            exchange: options.amqp.exchange || "logs",
-            routingKey: options.amqp.routingKey || ""
-            
-          })
-        )
       }
+      //console.log("Winston options");
+      //console.log(options);
+      //console.log("Transport extensions:-");
+      //console.log(options.extensions.winston.transports);
       var logger = winston.createLogger({
         level: options.level,
         defaultMeta: {

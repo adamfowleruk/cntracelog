@@ -37,8 +37,8 @@ createLogger: function(options, ns, contextID) {
             host: options.amqp.uri, // TODO port, username, password as from uri
             routing_key: options.amqp.routingKey,
             exchange: options.amqp.exchange,
-            mq_type: 'direct',
-            durable: true
+            mq_type: 'direct', // TODO should be topic?
+            durable: true // TODO should be false?
           }
         }
       });

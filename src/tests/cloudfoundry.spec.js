@@ -65,7 +65,7 @@ describe('tracelog', () => {
       expect(sink.getLog()).to.not.be.undefined;
     });
     
-    // The below won't work as it completes too fast to be caught - manuall testing with 2 run throughs does work
+    // The below won't work as it completes too fast to be caught - manual testing with 2 run throughs does work
     /*
     it('log should include a line about amqp',() => {
       log = sink.getLog();
