@@ -36,7 +36,7 @@
     "c8": "3.4.0",
     "chai": "4.2.0",
     "coveralls": "^3.0.2",
-    "mocha": "6.1.4",
+    "mocha": "10.2.0",
     "proxyquire": "2.1.0",
     "winston": "3.2.1",
     "amqplib": "0.5.3"
