@@ -180,11 +180,11 @@ class TraceLogger {
   _fmt(args) {
     if (undefined === this.context)
       return util.format(
-        [this.ns, args[0]].join(J),
+        [(new Date()).toISOString(),this.ns, args[0]].join(J),
         ...(args.slice(1))
       );
     return util.format(
-      [this.ns, this.context, args[0]].join(J),
+      [(new Date()).toISOString(), this.ns, this.context, args[0]].join(J),
       ...(args.slice(1))
     );
   }
@@ -219,6 +219,12 @@ class TraceLogger {
 
   metric(name, value) {
     this.info("METRIC ", name + "," + value);
+  }
+
+  // HEALTH INDICATORS
+
+  health(name, jsonValue) {
+    this.info("HEALTH ", name + "," + JSON.stringify(jsonValue));
   }
 };
 
