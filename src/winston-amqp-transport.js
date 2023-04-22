@@ -30,13 +30,16 @@ module.exports = class CNAMQPTransport extends Transport {
     this.aet = "topic";
     this.ae = "logging-exchange";
     this.ark = "";
-    if (undefined != this.opts.exchange) {
+    console.log("cntracelog.winston.amqp: amqp exchange type=" + this.aet);
+    console.log("cntracelog.winston.amqp: amqp exchange=" + this.ae);
+    console.log("cntracelog.winston.amqp: amqp routing key=" + this.ark);
+    if (undefined != this.opts.exchange && "" != this.opts.exchange) {
       this.ae = this.opts.exchange;
     }
-    if (undefined != this.opts.exchangeType) {
+    if (undefined != this.opts.exchangeType && "" != this.opts.exchangeType) {
       this.aet = this.opts.exchangeType;
     }
-    if (undefined != this.opts.routingKey) {
+    if (undefined != this.opts.routingKey && "" != this.opts.routingKey) {
       this.ark = this.opts.routingKey;
     }
     console.log("cntracelog.winston.amqp: amqp exchange type=" + this.aet);
